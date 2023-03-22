@@ -25,10 +25,35 @@ sample_overlaps <- function(find_clique, N, n, k, p, q) {
   # Return the vector of overlaps:
   return(overlaps)
 }
-  
-  # Compute the average overlap among the graphs
-  avg_overlap <- total_overlap / N
-  
-  # Return the average overlap
-  return(avg_overlap)
+
+plot_average_overlap <- function(find_clique, N, n, k, q) {
+  p_values <- seq(0, 1, by = 0.1)
+  overlaps <- sapply(p_values, function(p) {
+    mean(sample_overlaps(find_clique, N, n, k, p, q))
+  })
+  data <- data.frame(p = p_values, overlap = overlaps)
+  ggplot(data, aes(x = p, y = overlap)) +
+    geom_line() +
+    labs(x = "p", y = "Average Overlap")
 }
+
+# Define function to generate plot
+plot_overlap_boxplot <- function(find_clique, N, n, k, q) {
+  # Pick points to sample in:
+  p_values <- seq(0, 1, by = 0.1)
+  
+  # Generate data frame with overlap samples for each p value
+  overlap_df <- data.frame()
+  for (p in p_values) {
+    overlap_samples <- sample_overlaps(find_clique, N, n, k, p, q)
+    overlap_df <- rbind(overlap_df, data.frame(p = p, overlap = overlap_samples))
+  }
+  
+  # Create ggplot boxplot
+  ggplot(overlap_df, aes(x = factor(p), y = overlap)) +
+    geom_boxplot() +
+    ggtitle("Overlap Spread by p") +
+    xlab("p") +
+    ylab("Overlap")
+}
+
