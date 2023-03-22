@@ -9,8 +9,12 @@
 
 library(shiny)
 library(igraph)
+library(ggplot2)
 
 source("generate_planted_clique.R")
+source("clique_by_top_degrees.R")
+source("clique_by_spectrum.R")
+source("clique_by_naive_subsample.R")
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
