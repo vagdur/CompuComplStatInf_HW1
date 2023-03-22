@@ -1,4 +1,4 @@
-get_top_k_degrees <- function(graph, k) {
+clique_by_top_degrees <- function(graph, k) {
   # Get the degrees of all vertices in the graph
   degrees <- degree(graph)
   
