@@ -1,6 +1,6 @@
 library(igraph)
 
-generate_planted_clique_graph <- function(n, k, p, q) {
+generate_planted_clique <- function(n, k, p, q) {
   # Randomly sample a set S of k indices
   S <- sample(1:n, k)
   
