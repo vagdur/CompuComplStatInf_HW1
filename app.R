@@ -42,7 +42,25 @@ ui <- fluidPage(
                         "Probability of edges not within clique: (p)",
                         min = 0,
                         max = 1,
-                        value = 0.3)
+                        value = 0.3),
+            selectInput("algorithm",
+                        "Algorithm to use to find clique",
+                        c("Degree test", "Spectral method", "Naive subsample method"),
+                        "Degree test"),
+            conditionalPanel(
+              condition = "input.algorithm == 'Naive subsample method'",
+              tags$p("Our naive subsample method samples a random induced subgraph of G by including each vertex with probability (r_v + p)^gamma, where r_v is the percentile rank of v in the ordering of degrees."),
+              sliderInput("subsample_p",
+                          "Parameter p for subsampling:",
+                          min = 0,
+                          max = 1,
+                          value = 0.3),
+              sliderInput("subsample_gamma",
+                          "Parameter gamma for subsampling:",
+                          min = 0,
+                          max = 10,
+                          value = 2)
+            )
         ),
 
         # Show a plot of the generated distribution
@@ -55,6 +73,18 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   planted_clique_graph <- reactive(generate_planted_clique(input$n, input$k, input$p, input$q))
+  
+  recovered_clique <- reactive({
+    g <- planted_clique_graph()$graph
+    if (input$algorithm == "Degree test") {
+      clique <- clique_by_top_degrees(g, input$k)
+    } else if (input$algorithm == "Spectral method") {
+      clique <- clique_by_spectrum(g, input$k)
+    } else if (input$algorthm == "Naive subsample method") {
+      clique <- clique_by_naive_subsample(g, k, input$subsample_p, input$subsample_gamma)
+    }
+    return(clique)
+  })
   
   output$graphPlot <- renderPlot({
       plot.igraph(planted_clique_graph()$graph)
