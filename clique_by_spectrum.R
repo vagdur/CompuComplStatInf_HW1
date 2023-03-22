@@ -1,6 +1,9 @@
 clique_by_spectrum <- function(graph, k) {
   # Get the adjacency matrix of the graph
   adj_matrix <- as.matrix(get.adjacency(graph))
+  # this returns a non-symmetric matrix using only the upper
+  # half, so we need to make it symmetric:
+  adj_matrix <- adj_matrix + t(adj_matrix)
   
   # Create the weight matrix W = 2A - 1 off the diagonal, 0 on the diagonal
   n <- nrow(adj_matrix)
