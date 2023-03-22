@@ -18,7 +18,7 @@ generate_planted_clique <- function(n, k, p, q) {
   # Add edges between pairs of vertices not both in S with probability p
   for (i in 1:(n-1)) {
     for (j in (i+1):n) {
-      if ((i %in% S) != (j %in% S) && runif(1) < p) {
+      if ((!(i %in% S) || !(j %in% S)) && runif(1) < p) {
         g <- add_edges(g, c(i, j))
       }
     }
