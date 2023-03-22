@@ -10,11 +10,13 @@
 library(shiny)
 library(igraph)
 library(ggplot2)
+library(furrr)
 
 source("generate_planted_clique.R")
 source("clique_by_top_degrees.R")
 source("clique_by_spectrum.R")
 source("clique_by_naive_subsample.R")
+source("compute_average_overlap.R")
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -51,6 +53,12 @@ ui <- fluidPage(
                         "Algorithm to use to find clique",
                         c("Degree test", "Spectral method", "Naive subsample method"),
                         "Degree test"),
+            sliderInput("N",
+                        "Number of graphs to sample for overlap boxplot",
+                        min = 1,
+                        max = 100,
+                        value = 1,
+                        round = TRUE),
             conditionalPanel(
               condition = "input.algorithm == 'Naive subsample method'",
               tags$p("Our naive subsample method samples a random induced subgraph of G by including each vertex with probability (r_v + p)^gamma, where r_v is the percentile rank of v in the ordering of degrees."),
@@ -70,7 +78,9 @@ ui <- fluidPage(
         # Show a plot of the generated graph
         mainPanel(
           tags$p("Vertices neither in the actual ground truth clique nor in the estimated clique are grey. Correctly estimated vertices are green. Type 1 errors (vertices falsely identified as being in the clique) are orange, type 2 errors (vertices in the clique but not found) are red."),
-           plotOutput("graphPlot")
+          plotOutput("graphPlot"),
+          tags$p("The below plot illustrates how the overlap - the number of correctly found clique vertices divided by k - varies as we vary the probability of edges outside the clique, keeping all other parameters fixed to the values set in the sidebar."),
+          plotOutput("overlapBoxplot")
         )
     )
 )
@@ -85,8 +95,8 @@ server <- function(input, output) {
       clique <- clique_by_top_degrees(g, input$k)
     } else if (input$algorithm == "Spectral method") {
       clique <- clique_by_spectrum(g, input$k)
-    } else if (input$algorthm == "Naive subsample method") {
-      clique <- clique_by_naive_subsample(g, k, input$subsample_p, input$subsample_gamma)
+    } else if (input$algorithm == "Naive subsample method") {
+      clique <- clique_by_naive_subsample(g, input$k, input$subsample_p, input$subsample_gamma)
     }
     return(clique)
   })
@@ -118,6 +128,19 @@ server <- function(input, output) {
     g <- planted_clique_graph()$graph
     V(g)$color <- graph_vertex_colors()
     plot.igraph(g, layout = graph_layout())
+  })
+  
+  output$overlapBoxplot <- renderPlot({
+    if (input$algorithm == "Degree test") {
+      p <- plot_overlap_boxplot(clique_by_top_degrees, input$N, input$n, input$k, input$q)
+    } else if (input$algorithm == "Spectral method") {
+      p <- plot_overlap_boxplot(clique_by_naive_subsample, input$N, input$n, input$k, input$q)
+    } else if (input$algorithm == "Naive subsample method") {
+      p <- plot_overlap_boxplot(clique_by_top_degrees, 
+                                input$N, input$n, input$k, input$q,
+                                input$subsample_p, input$subsample_gamma)
+    }
+    plot(p)
   })
 }
 
