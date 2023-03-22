@@ -1,4 +1,4 @@
-sample_overlaps <- function(find_clique, N, n, k, p, q) {
+sample_overlaps <- function(find_clique, N, n, k, p, q, subsample_p = 0, subsample_gamma = 0) {
   # Initialize total overlap to 0
   total_overlap <- 0
   
@@ -12,8 +12,13 @@ sample_overlaps <- function(find_clique, N, n, k, p, q) {
     graph <- graph_and_S[[1]]
     S <- graph_and_S[[2]]
     
-    # Find the clique using the find_clique function
-    S_hat <- find_clique(graph, k)
+    # Find the clique using the find_clique function - passing extra params if they're nonzero
+    if (subsample_gamma != 0 && subsample_p != 0) {
+      S_hat <- find_clique(graph, k, subsample_p, subsample_gamma)  
+    } else {
+      S_hat <- find_clique(graph, k)
+    }
+    
     
     # Compute the overlap between S_hat and the actual set S
     overlap <- length(intersect(S, S_hat)) / k
@@ -26,6 +31,7 @@ sample_overlaps <- function(find_clique, N, n, k, p, q) {
   return(overlaps)
 }
 
+#Doesn't work with the naive subsample method
 plot_average_overlap <- function(find_clique, N, n, k, q) {
   p_values <- seq(0, 1, by = 0.1)
   overlaps <- sapply(p_values, function(p) {
@@ -38,14 +44,14 @@ plot_average_overlap <- function(find_clique, N, n, k, q) {
 }
 
 # Define function to generate plot
-plot_overlap_boxplot <- function(find_clique, N, n, k, q) {
+plot_overlap_boxplot <- function(find_clique, N, n, k, q, subsample_p = 0, subsample_gamma = 0) {
   # Pick points to sample in:
   p_values <- seq(0, 1, by = 0.1)
   
   # Generate data frame with overlap samples for each p value
   overlap_df <- data.frame()
   for (p in p_values) {
-    overlap_samples <- sample_overlaps(find_clique, N, n, k, p, q)
+    overlap_samples <- sample_overlaps(find_clique, N, n, k, p, q, subsample_p, subsample_gamma)
     overlap_df <- rbind(overlap_df, data.frame(p = p, overlap = overlap_samples))
   }
   
