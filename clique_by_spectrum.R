@@ -4,10 +4,14 @@ clique_by_spectrum <- function(graph, k) {
   
   # Create the weight matrix W = 2A - 1 off the diagonal, 0 on the diagonal
   n <- nrow(adj_matrix)
-  W <- 2 * adj_matrix - diag(n)
+  W <- 2 * adj_matrix - 1 + diag(n)
   
   # Compute the top eigenvector of W
   ev <- eigen(W)$vectors[,1]
+  
+  # This top eigenvector will have the type "complex" despite of course consisting
+  # of reals, so we fix this:
+  ev <- as.double(ev)
   
   # Get the indices of the k largest values in the eigenvector
   K_tilde <- order(ev, decreasing = TRUE)[1:k]
