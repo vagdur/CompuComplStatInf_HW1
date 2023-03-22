@@ -24,6 +24,9 @@ generate_planted_clique_graph <- function(n, k, p, q) {
     }
   }
   
+  # This created a directed graph, so we make it undirected:
+  g <- as.undirected(g)
+  
   # Return the graph and the set S
   return(list(graph = g, S = S))
 }
