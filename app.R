@@ -63,8 +63,9 @@ ui <- fluidPage(
             )
         ),
 
-        # Show a plot of the generated distribution
+        # Show a plot of the generated graph
         mainPanel(
+          tags$p("Vertices neither in the actual ground truth clique nor in the estimated clique are grey. Correctly estimated vertices are green. Type 1 errors (vertices falsely identified as being in the clique) are orange, type 2 errors (vertices in the clique but not found) are red."),
            plotOutput("graphPlot")
         )
     )
@@ -86,8 +87,33 @@ server <- function(input, output) {
     return(clique)
   })
   
+  graph_vertex_colors <- reactive({
+    g <- planted_clique_graph()$graph
+    S_star <- planted_clique_graph()$S
+    
+    # Default colour is grey:
+    vcolours <- rep("grey", length(V(g)))
+    
+    # Things in the actual clique but not found are red:
+    vcolours[S_star] <- "red"
+    
+    # Things not in the clique the algorithm found are orange:
+    vcolours[recovered_clique()] <- "orange"
+      
+    # Things in the intersection are green:
+    vcolours[intersect(S_star, recovered_clique())] <- "green"
+      
+    vcolours
+  })
+  
+  graph_layout <- reactive({
+    layout_with_fr(planted_clique_graph()$graph)
+  })
+  
   output$graphPlot <- renderPlot({
-      plot.igraph(planted_clique_graph()$graph)
+    g <- planted_clique_graph()$graph
+    V(g)$color <- graph_vertex_colors()
+    plot.igraph(g, layout = graph_layout())
   })
 }
 
